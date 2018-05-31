@@ -43,6 +43,7 @@ namespace cplan {
     void update(std::string title = "", std::string message = "");
 
     static void toClipboard(const std::wstring &wstr);
+    static std::string fromClipboard();
   public:
 
     static LRESULT CALLBACK windowCB(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

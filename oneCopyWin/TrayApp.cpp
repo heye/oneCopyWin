@@ -5,9 +5,15 @@
 #include <Shlwapi.h>
 #include <psapi.h>
 
+#include <locale>
+#include <codecvt>
+#include <sstream>
+#include <memory>
+
 #include "resource.h"
 
 #include "PocoRequest.h"
+#include "B64.h"
 
 #ifdef UNICODE
 #define stringcopy wcscpy_s
@@ -69,7 +75,7 @@ cplan::TrayApp & cplan::TrayApp::getInstance() {
 
 HWND cplan::TrayApp::createWindow(HINSTANCE inst)
 {
-  iconDEFAULT_ = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ONECOPYWIN));
+  iconDEFAULT_ = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_TRAY));
   WNDCLASSEX wnd = { 0 };
   wnd.hInstance = inst;
   TCHAR className[] = TEXT("tray icon class");
@@ -289,16 +295,42 @@ void cplan::TrayApp::exit() {
 }
 
 void cplan::TrayApp::pushAction() {
-  //TODO
+  auto value = fromClipboard();
+
+  auto valueEncoded = CPNet::B64::encode(value.c_str(), value.length());
+
+  std::stringstream json;
+  json << "{\"type\":\"set_key\",\"key\":\"test-key\",\"value\":\"" << valueEncoded << "\"}";
+
   CPNet::PocoRequest request("https://azenix.io");
+  auto reply = request.post(json.str());
 
-  auto reply = request.post("{}");
-
-  cplan::TrayApp::toClipboard(L"test");
 }
 
 void cplan::TrayApp::pullAction() {
-  //ShellExecuteA(NULL, "open", "http://127.0.0.1:56392", NULL, NULL, SW_SHOWNORMAL);
+
+  //get from server
+  CPNet::PocoRequest request("https://azenix.io");
+
+  auto reply = request.post("{\"type\":\"get_key\",\"key\":\"test-key\"}");
+
+  auto val = request.getString("value");
+  
+  //decode base64
+  std::unique_ptr<char[]> data(new char[CPNet::B64::b64DecodeSize(val.length())]);
+
+  auto dataSize = CPNet::B64::decode(val, *data.get(), CPNet::B64::b64DecodeSize(val.length())) - 1;
+  if (dataSize < 0) {
+    return;
+  }
+
+  std::string valStr(data.get(), dataSize);
+
+  //set clipboard value
+  using convert_type = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_type, wchar_t> converter;
+
+  cplan::TrayApp::toClipboard(converter.from_bytes(valStr));
 }
 
 void cplan::TrayApp::settingsAction() {
@@ -312,6 +344,58 @@ void cplan::TrayApp::doQuit() {
 
 
 void cplan::TrayApp::toClipboard(const std::wstring &wstr) {
+  if (wstr.empty()) {
+    return;
+  }
+
+  OpenClipboard(0);
+  EmptyClipboard();
+
+  HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, sizeof(wchar_t) * (wcslen(wstr.c_str()) + 1));
+  if (!hg) {
+    CloseClipboard();
+    return;
+  }
+
+  wchar_t* pchData;
+  pchData = (wchar_t*)GlobalLock(hg);
+  auto size = wcslen(wstr.c_str()) + 1;
+  wcscpy_s(pchData, size, wstr.c_str());
+  GlobalUnlock(hg);
+
+  SetClipboardData(CF_UNICODETEXT, hg);
+  CloseClipboard();
+  GlobalFree(hg);
+
+}
+
+std::string cplan::TrayApp::fromClipboard() {
+
+  std::wstring strData;
+
+  if (OpenClipboard(NULL))
+  {
+    HANDLE hClipboardData = GetClipboardData(CF_UNICODETEXT);
+    if (hClipboardData)
+    {
+      WCHAR *pchData = (WCHAR*)GlobalLock(hClipboardData);
+      if (pchData)
+      {
+        strData = pchData;
+        GlobalUnlock(hClipboardData);
+      }
+    }
+    CloseClipboard();
+  }
+
+
+  using convert_type = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_type, wchar_t> converter;
+  return converter.to_bytes(strData);
+}
+
+
+/*void cplan::TrayApp::toClipboard(const std::wstring &wstr) {
   if (!wstr.empty()) {
 
     OpenClipboard(0);
@@ -333,4 +417,4 @@ void cplan::TrayApp::toClipboard(const std::wstring &wstr) {
     CloseClipboard();
     GlobalFree(hg);
   }
-}
+}*/

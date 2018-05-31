@@ -19,6 +19,8 @@
 #include "Poco/URI.h"
 #include "Poco/Exception.h"
 
+#include "Poco/JSON/Parser.h"
+
 
 #include <iostream>
 
@@ -37,7 +39,7 @@ CPNet::PocoRequest::~PocoRequest()
 }
 
 std::string CPNet::PocoRequest::post(std::string payload, std::string user, std::string passwd) {
-  std::string reply;
+  jsonReply_ = "";
 
   try {
 
@@ -99,11 +101,29 @@ std::string CPNet::PocoRequest::post(std::string payload, std::string user, std:
       auto readBuff = std::auto_ptr<char>(new char[readSize]);
       rs.read(readBuff.get(), readSize);
       //readBuff.get()[readSize] = '\0'; //make it a c string
-      reply = std::string(readBuff.get(), readSize);
+      jsonReply_ = std::string(readBuff.get(), readSize);
     }
   }
   catch (const std::exception& e) {
   }
 
-  return reply;
+  return jsonReply_;
+}
+
+std::string CPNet::PocoRequest::getString(std::string key) {
+
+  try {
+    Poco::JSON::Parser parser;
+    auto parsed = parser.parse(jsonReply_);
+
+    auto object = parsed.extract<Poco::JSON::Object::Ptr>();
+
+    auto value = object->getValue<std::string>(key);
+
+    return value;
+  }
+  catch (std::exception &e) {
+
+  }
+  return "";
 }

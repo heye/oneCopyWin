@@ -16,7 +16,13 @@ namespace CPNet {
 
     std::string post(std::string request, std::string user = "", std::string passwd = "");
 
+    std::string getString(std::string key);
+    std::string getBool(std::string key);
+
+
   private:
+
+    std::string jsonReply_;
 
     std::string serverAddr_;
     bool noverify_;
