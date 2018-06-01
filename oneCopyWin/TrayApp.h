@@ -10,11 +10,11 @@ namespace cplan {
 
   class TrayApp {
   public:
-    int run();
+    int run(HINSTANCE instance);
 
     HANDLE thread_;
     static TrayApp& getInstance();
-    HWND createWindow(HINSTANCE inst);
+    HWND createWindow();
     HMENU createContext();
   private:
     //singleton
@@ -26,6 +26,7 @@ namespace cplan {
 
     typedef std::function<void()> buttonCallback;
 
+    HINSTANCE instance_;
     HWND window_;
     HICON iconDEFAULT_;
     NOTIFYICONDATA notificationData_;
@@ -66,6 +67,8 @@ namespace cplan {
     static void pullAction();
 
     static void settingsAction();
+
+    static void aboutAction();
   };
 }
 

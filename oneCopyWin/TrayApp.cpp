@@ -27,12 +27,14 @@
 
 
 
-int cplan::TrayApp::run() {
-  //printf("running main event loop\n");
+int cplan::TrayApp::run(HINSTANCE instance) {
+  instance_ = instance;
+
+  createWindow();
 
   cplan::TrayApp::update("started app!", "oneCopy");
 
-  //TODO: run main application
+  //run main application
   MSG msg;
   BOOL bret = 0;
   while ((bret = GetMessage(&msg, window_, 0, 0)) != 0)
@@ -41,12 +43,9 @@ int cplan::TrayApp::run() {
     {
       break;
     }
-    //printf("got message1 \n");
     TranslateMessage(&msg);
     DispatchMessage(&msg);
-    //printf("got message2 \n");
   }
-  //printf("getmessage failed\n");
 
   return 0;
 }
@@ -73,11 +72,11 @@ cplan::TrayApp & cplan::TrayApp::getInstance() {
   return app;
 }
 
-HWND cplan::TrayApp::createWindow(HINSTANCE inst)
+HWND cplan::TrayApp::createWindow()
 {
   iconDEFAULT_ = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON_TRAY));
   WNDCLASSEX wnd = { 0 };
-  wnd.hInstance = inst;
+  wnd.hInstance = instance_;
   TCHAR className[] = TEXT("tray icon class");
   wnd.lpszClassName = className;
   wnd.lpfnWndProc = windowCB;
@@ -101,7 +100,7 @@ HWND cplan::TrayApp::createWindow(HINSTANCE inst)
     CW_USEDEFAULT, CW_USEDEFAULT,
     400, 400,
     NULL, NULL,
-    inst, NULL
+    instance_, NULL
   );
   memset(&notificationData_, 0, sizeof(NOTIFYICONDATA));
   notificationData_.cbSize = sizeof(NOTIFYICONDATA);
@@ -124,15 +123,69 @@ HMENU cplan::TrayApp::createContext()
   addMenuItem("pull", std::bind(&cplan::TrayApp::pullAction));
   addMenuSpacer();
   addMenuItem("settings", std::bind(&cplan::TrayApp::settingsAction));
+  addMenuItem("about", std::bind(&cplan::TrayApp::aboutAction));
   addMenuItem("exit", std::bind(&cplan::TrayApp::doQuit, this));
   return contextMenu_;
 }
+
+// Message handler for about box.
+INT_PTR CALLBACK About2(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  UNREFERENCED_PARAMETER(lParam);
+  switch (message)
+  {
+  case WM_INITDIALOG: {
+    std::wstring apikey = L"test-key";
+    SetDlgItemText(hDlg, IDC_EDIT1, apikey.c_str());
+
+    return (INT_PTR)TRUE;
+  }
+
+  case WM_COMMAND:
+    if (LOWORD(wParam) == IDOK)
+    {
+      EndDialog(hDlg, LOWORD(wParam));
+
+      WCHAR apikey[256];
+      GetDlgItemText(hDlg, IDC_EDIT1, apikey, 256);
+
+      WCHAR server[256];
+      GetDlgItemText(hDlg, IDC_EDIT2, server, 256);
+
+      return (INT_PTR)TRUE;
+    }
+    if (LOWORD(wParam) == IDCANCEL) {
+      EndDialog(hDlg, LOWORD(wParam));
+      return (INT_PTR)TRUE;
+    }
+    break;
+  }
+  return (INT_PTR)FALSE;
+}
+
 
 LRESULT CALLBACK cplan::TrayApp::windowCB(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
   //wParam: try icon id
 
   switch (message)
   {
+  case WM_COMMAND:
+  {
+    int wmId = LOWORD(wParam);
+    // Parse the menu selections:
+    switch (wmId)
+    {
+    case IDM_ABOUT:
+      DialogBox(cplan::TrayApp::getInstance().instance_, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, About2);
+      break;
+    case IDM_SETTINGS:
+      DialogBox(cplan::TrayApp::getInstance().instance_, MAKEINTRESOURCE(IDD_SETTINGS), hwnd, About2);
+      break;
+    default:
+      return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+  }
+  break;
   case WM_CREATE:
     TrayApp::getInstance().createContext();
 
@@ -336,6 +389,16 @@ void cplan::TrayApp::pullAction() {
 void cplan::TrayApp::settingsAction() {
   //ShellExecuteA(NULL, "open", "http://127.0.0.1:56392", NULL, NULL, SW_SHOWNORMAL);
   cplan::TrayApp::showNotification("settings!", "oneCopy");
+
+  PostMessage(cplan::TrayApp::getInstance().window_, WM_COMMAND, IDM_SETTINGS, 0);
+}
+
+void cplan::TrayApp::aboutAction() {
+  //ShellExecuteA(NULL, "open", "http://127.0.0.1:56392", NULL, NULL, SW_SHOWNORMAL);
+  //cplan::TrayApp::showNotification("settings!", "oneCopy");
+
+  PostMessage(cplan::TrayApp::getInstance().window_, WM_COMMAND, IDM_ABOUT, 0);
+  //settingsWindow::getInstance().about();
 }
 
 void cplan::TrayApp::doQuit() {
