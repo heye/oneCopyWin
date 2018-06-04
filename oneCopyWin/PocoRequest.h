@@ -14,6 +14,7 @@ public:
 
 
   std::string post(std::string request, std::string user = "", std::string passwd = "");
+  std::string post(const char* buffer, int bufferSize, std::string user = "", std::string passwd = "");
 
   std::string getString(std::string key);
   std::string getBool(std::string key);

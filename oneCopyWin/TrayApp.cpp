@@ -327,15 +327,51 @@ void TrayApp::setTooltip(std::string tooltip) {
 
 void TrayApp::pushAction() {
   auto value = Clipboard::getString();
-  auto valueEncoded = B64::encode(value.c_str(), value.length());
   auto apiKey = Config::getAPIKeyOne();
 
-  std::stringstream json;
-  json << "{\"type\":\"set_key\",\"key\":\"" << apiKey << "\",\"value\":\"" << valueEncoded << "\"}";
-  
-  PocoRequest request(Config::getServerAddr());
-  auto reply = request.post(json.str());
+  //copied text -> direct upload
+  if (!value.empty()) {
+    auto valueEncoded = B64::encode(value.c_str(), value.length());
+    std::stringstream json;
+    json << "{\"type\":\"set_key\",\"key\":\"" << apiKey << "\",\"value\":\"" << valueEncoded << "\"}";
 
+    PocoRequest request(Config::getServerAddr());
+    auto reply = request.post(json.str());
+
+    return;
+  }
+  
+  auto filePath = Clipboard::getFilePath();
+  if (!filePath.empty()) {
+    //upload file name as key
+    auto fileName = Util::toStr(Util::fileNameFromPath(filePath));
+
+    auto valueEncoded = B64::encode(fileName.c_str(), fileName.length());
+    std::stringstream json;
+    json << "{\"type\":\"set_key\",\"key\":\"" << apiKey << "\",\"value\":\"" << valueEncoded << "\"}";
+
+    PocoRequest request(Config::getServerAddr());
+    auto valueReply = request.post(json.str());
+
+    
+    //upload file
+    auto fileSize = Util::getFileSize(filePath);
+    if (fileSize > 1000000) {
+      return;
+    }
+
+    std::unique_ptr<char[]> data(new char[fileSize]);
+    Util::readFile(filePath, data.get(), fileSize);
+
+    std::stringstream uploadURL;
+    uploadURL << Config::getServerAddr() << "/file/" << apiKey;
+    PocoRequest uploadRequest(uploadURL.str());
+    auto fileReply = uploadRequest.post(data.get(), fileSize);
+
+    
+    //build link & copy link to clipboard
+
+  }
 }
 
 void TrayApp::pullAction() {

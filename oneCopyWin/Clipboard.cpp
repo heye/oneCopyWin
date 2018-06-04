@@ -4,26 +4,52 @@
 #include "Util.h"
 
 #include <Windows.h>
+#include <Shellapi.h>
 
 std::string Clipboard::getString() {
   std::wstring strData;
 
-  if (OpenClipboard(NULL))
-  {
+  if (OpenClipboard(NULL)) {
     HANDLE hClipboardData = GetClipboardData(CF_UNICODETEXT);
-    if (hClipboardData)
-    {
+    if (hClipboardData) {
       WCHAR *pchData = (WCHAR*)GlobalLock(hClipboardData);
       if (pchData)
       {
         strData = pchData;
         GlobalUnlock(hClipboardData);
       }
-    }
+    }    
     CloseClipboard();
   }
 
   return Util::toStr(strData);
+}
+
+std::wstring Clipboard::getFilePath() {
+  std::wstring strData;
+
+  if (OpenClipboard(NULL)) {
+    HANDLE hDrop = GetClipboardData(CF_HDROP);
+    if (hDrop) {
+
+      WCHAR buffer[1024];
+
+      auto copiedFiles = DragQueryFile((HDROP)hDrop, 0xFFFFFFFF, buffer, 0);
+      if (copiedFiles > 0) {
+        
+        auto buffRequired = DragQueryFile((HDROP)hDrop, 0, buffer, NULL);
+
+        if (buffRequired < 1024) {
+          DragQueryFile((HDROP)hDrop, 0, buffer, 1024);
+
+          strData = std::wstring(buffer, buffRequired);
+        }
+      }
+    }
+    CloseClipboard();
+  }
+
+  return strData;
 }
 
 void Clipboard::setString(std::string value) {
