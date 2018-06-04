@@ -370,6 +370,10 @@ void TrayApp::pushAction() {
 
     
     //build link & copy link to clipboard
+    std::stringstream fileLink;
+    fileLink << Config::getServerAddr() << "/file/" << apiKey << "/" << fileName;
+
+    Clipboard::setString(fileLink.str());
 
   }
 }
@@ -392,6 +396,10 @@ void TrayApp::pullAction() {
     return;
   }
   std::string valStr(data.get(), dataSize);
+
+  //TODO: check if it is a file
+  //TODO: download file
+  //TODO: set file to clipboard
 
   Clipboard::setString(valStr);
 }
