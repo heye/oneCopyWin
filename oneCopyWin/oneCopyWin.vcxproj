@@ -183,15 +183,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="B64.h" />
+    <ClInclude Include="Clipboard.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="oneCopyWin.h" />
     <ClInclude Include="PocoRequest.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TrayApp.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="B64.cpp" />
+    <ClCompile Include="Clipboard.cpp" />
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="oneCopyWin.cpp" />
     <ClCompile Include="PocoRequest.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -201,12 +206,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TrayApp.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="oneCopyWin.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon1.ico" />
     <Image Include="oneCopyWin.ico" />
     <Image Include="tray_icon.ico" />
   </ItemGroup>

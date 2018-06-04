@@ -3,7 +3,7 @@
 #include "B64.h"
 #include <memory>
 
-char CPNet::B64::encodingTable[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+char B64::encodingTable[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -12,11 +12,11 @@ char CPNet::B64::encodingTable[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 'w', 'x', 'y', 'z', '0', '1', '2', '3',
 '4', '5', '6', '7', '8', '9', '+', '/' };
 
-char CPNet::B64::decodingTable[256];
-bool CPNet::B64::init_ = false;
-//bool CPNet::B64::isAvailable_ = false;
+char B64::decodingTable[256];
+bool B64::init_ = false;
+//bool B64::isAvailable_ = false;
 
-std::string CPNet::B64::encode(char const* inputData, unsigned int in_len) {
+std::string B64::encode(char const* inputData, unsigned int in_len) {
 
 	auto outSize = (in_len / 3) * 4;
 	if (in_len % 3 != 0) {
@@ -76,12 +76,12 @@ std::string CPNet::B64::encode(char const* inputData, unsigned int in_len) {
 	return ret;
 }
 
-int CPNet::B64::b64DecodeSize(int b64StringSize) {
+int B64::b64DecodeSize(int b64StringSize) {
 	return b64StringSize / 4 * 3 + 1;
 }
 
 
-int CPNet::B64::decode(std::string inputData, char &outBuff, int outBuffSize) {
+int B64::decode(std::string inputData, char &outBuff, int outBuffSize) {
 
 
 	if (inputData.size() > 4 && inputData.at(inputData.size() - 1) == '\n') {
@@ -132,19 +132,19 @@ int CPNet::B64::decode(std::string inputData, char &outBuff, int outBuffSize) {
 	return outputLen;
 }
 
-void CPNet::B64::init() {
+void B64::init() {
 	if (!init_) {
 		init_ = true;
 		for (int i = 0; i < 64; i++)
 			decodingTable[(uint8_t)encodingTable[i]] = (char)i;
 
-		/*isAvailable_ = CPNet::B64::test();
+		/*isAvailable_ = B64::test();
 		if (!isAvailable_) {
 			CPLOG_ERROR << "B64 TEST ERROR";
 		}*/
 	}
 }
 
-/*bool CPNet::B64::isAvailable() {
+/*bool B64::isAvailable() {
 	return isAvailable_;
 }*/

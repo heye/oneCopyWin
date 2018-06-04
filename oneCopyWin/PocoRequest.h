@@ -3,31 +3,30 @@
 
 #include <string>
 
-namespace CPNet {
-  class PocoRequest
-  {
-  public:
-    PocoRequest(std::string serverAddr,
-      bool secure = true,
-      bool noverify = false);
-    ~PocoRequest();
+class PocoRequest
+{
+public:
+  PocoRequest(std::string serverAddr,
+    bool secure = true,
+    bool noverify = false);
+  ~PocoRequest();
 
 
 
-    std::string post(std::string request, std::string user = "", std::string passwd = "");
+  std::string post(std::string request, std::string user = "", std::string passwd = "");
 
-    std::string getString(std::string key);
-    std::string getBool(std::string key);
+  std::string getString(std::string key);
+  std::string getBool(std::string key);
 
 
-  private:
+private:
 
-    std::string jsonReply_;
+  std::string jsonReply_;
 
-    std::string serverAddr_;
-    bool noverify_;
-  };
-}
+  std::string serverAddr_;
+  bool noverify_;
+};
+
 
 
 #endif

@@ -6,70 +6,60 @@
 #include <map>
 #include <functional>
 
-namespace cplan {
+class TrayApp {
+public:
+  int run(HINSTANCE instance);
 
-  class TrayApp {
-  public:
-    int run(HINSTANCE instance);
+  static TrayApp& getInstance();
+  HWND createWindow();
+  HMENU createContext();
 
-    HANDLE thread_;
-    static TrayApp& getInstance();
-    HWND createWindow();
-    HMENU createContext();
-  private:
-    //singleton
-    TrayApp();
-    ~TrayApp();
-    TrayApp(TrayApp const&);
-    void operator=(TrayApp const&) = delete;
-    void doQuit();
+private:
+  //singleton
+  TrayApp();
+  ~TrayApp();
+  TrayApp(TrayApp const&);
+  void operator=(TrayApp const&) = delete;
 
-    typedef std::function<void()> buttonCallback;
+  typedef std::function<void()> buttonCallback;
 
-    HINSTANCE instance_;
-    HWND window_;
-    HICON iconDEFAULT_;
-    NOTIFYICONDATA notificationData_;
+  HINSTANCE instance_;
+  HWND window_;
+  HICON iconDEFAULT_;
+  NOTIFYICONDATA notificationData_;
 
-    std::string tooltip_;
+  std::string tooltip_;
+  bool addedIcon_;
 
-    bool addedIcon_;
+  //notification area icon & menu
+  HMENU contextMenu_;
+  void addMenuItem(std::string title, buttonCallback callback);
+  void addMenuSpacer();
+  std::map<int, buttonCallback> callbacks_;
 
-    //context menu
-    HMENU contextMenu_;
-    void addMenuItem(std::string title, buttonCallback callback);
-    void addMenuSpacer();
-    std::map<int, buttonCallback> callbacks_;
+  void update(std::string title = "", std::string message = "");
 
-    void update(std::string title = "", std::string message = "");
+public:
+  static LRESULT CALLBACK windowCB(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-    static void toClipboard(const std::wstring &wstr);
-    static std::string fromClipboard();
-  public:
+  /*
+  notification area icon stuff
+  */
+  static void removeIcon();
+  static void showNotification(std::string title, std::string message);
+  static void setTooltip(std::string tooltip);
 
-    static LRESULT CALLBACK windowCB(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-    static void removeIcon();
-    void exit();
-    /*
-    show notification & icon
-    */
-    static void showNotification(std::string title, std::string message);
 
-    /*
-    windows only
-    there are no tooltips in macOS
-    */
-    static void setTooltip(std::string tooltip);
+  /*
+  button actions
+  */
+  static void pushAction();
+  static void pullAction();
+  static void settingsAction();
+  static void aboutAction();
+  static void quitAction();
+};
 
-    static void pushAction();
-
-    static void pullAction();
-
-    static void settingsAction();
-
-    static void aboutAction();
-  };
-}
 
 #endif
